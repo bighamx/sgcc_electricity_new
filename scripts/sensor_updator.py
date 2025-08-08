@@ -58,6 +58,7 @@ class SensorUpdator:
         self.send_url(sensorName, request_body)
         logging.info(f"Homeassistant sensor {sensorName} state updated: {sensorState} kWh")
 
+
     def update_balance(self, postfix: str, sensorState: float):
         sensorName = BALANCE_SENSOR_NAME + postfix
         last_reset = datetime.now().isoformat()
