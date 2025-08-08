@@ -37,11 +37,17 @@ class SensorUpdator:
 
     def update_last_daily_usage(self, postfix: str, last_daily_date: str, sensorState: float):
         sensorName = DAILY_USAGE_SENSOR_NAME + postfix
+        # last_daily_date 应为 ISO 8601 格式
+        try:
+            # 若传入为日期字符串，转为 ISO 格式
+            last_reset = datetime.strptime(last_daily_date, "%Y-%m-%d").isoformat()
+        except Exception:
+            last_reset = last_daily_date  # 保持原样，假定已为合法格式
         request_body = {
             "state": sensorState,
             "unique_id": sensorName,
             "attributes": {
-                "last_reset": last_daily_date,
+                "last_reset": last_reset,
                 "unit_of_measurement": "kWh",
                 "icon": "mdi:lightning-bolt",
                 "device_class": "energy",
@@ -54,7 +60,7 @@ class SensorUpdator:
 
     def update_balance(self, postfix: str, sensorState: float):
         sensorName = BALANCE_SENSOR_NAME + postfix
-        last_reset = datetime.now().strftime("%Y-%m-%d, %H:%M:%S")
+        last_reset = datetime.now().isoformat()
         request_body = {
             "state": sensorState,
             "unique_id": sensorName,
@@ -79,7 +85,8 @@ class SensorUpdator:
         current_date = datetime.now()
         first_day_of_current_month = current_date.replace(day=1)
         last_day_of_previous_month = first_day_of_current_month - timedelta(days=1)
-        last_reset = last_day_of_previous_month.strftime("%Y-%m")
+        # last_reset 设为上月最后一天的 ISO 格式
+        last_reset = last_day_of_previous_month.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
         request_body = {
             "state": sensorState,
             "unique_id": sensorName,
@@ -101,11 +108,12 @@ class SensorUpdator:
             if usage
             else YEARLY_CHARGE_SENSOR_NAME + postfix
         )
-        if datetime.now().month == 1:
-            last_year = datetime.now().year -1 
-            last_reset = datetime.now().replace(year=last_year).strftime("%Y")
+        now = datetime.now()
+        if now.month == 1:
+            last_year = now.year - 1
+            last_reset = now.replace(year=last_year, month=12, day=31, hour=0, minute=0, second=0, microsecond=0).isoformat()
         else:
-            last_reset = datetime.now().strftime("%Y")
+            last_reset = now.replace(month=12, day=31, hour=0, minute=0, second=0, microsecond=0).isoformat()
         request_body = {
             "state": sensorState,
             "unique_id": sensorName,
